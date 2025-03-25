@@ -12,7 +12,12 @@ A professional web application for creating, visualizing, and managing project t
 
 Project Timeline Visualizer is a powerful web application that enables project managers, teams, and stakeholders to create detailed visual timelines for projects of any size. The application offers an intuitive interface for defining tasks, setting dependencies, marking holidays, and visualizing the complete project schedule with professional-grade Gantt charts.
 
-![Project Timeline Visualizer Screenshot](https://via.placeholder.com/800x400?text=Project+Timeline+Visualizer)
+
+![image](https://github.com/user-attachments/assets/271aaf6d-774d-487f-8b24-cb916c2d27f7)
+
+
+![image](https://github.com/user-attachments/assets/b89b340e-7cf0-4e4c-874d-fb67713b9e99)
+
 
 ## Key Features
 
