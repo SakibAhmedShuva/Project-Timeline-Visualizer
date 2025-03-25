@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Timeline Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--secondary);
+            background-color: #f5f7fa;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem 2rem 0.5rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.25rem 0; /* Reduced from 2rem to 1.25rem */
+            text-align: center;
+            border-bottom: 5px solid var(--secondary);
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem; /* Increased horizontal padding */
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem; /* Reduced from 0.5rem */
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px; /* Increased from 700px to allow more text per line */
+            margin: 0 auto;
+            line-height: 1.4; /* Slightly tighter line height */
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .timeline-form {
+            flex: 1.5;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px var(--shadow);
+        }
+
+        .timeline-preview {
+            flex: 2;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            background-color: var(--primary);
+            border: 1px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 5px;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .timeline-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px var(--shadow);
+            display: none;
+        }
+
+        .timeline-placeholder {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .timeline-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--border);
+        }
+
+        .timeline-placeholder p {
+            font-size: 1.2rem;
+        }
+
+        .task-list {
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 1rem;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+            .task-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            padding-right: 10px;
+            color: var(--gray);
+        }
+
+        .drag-handle:hover {
+            color: var(--primary);
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-item-ghost {
+            opacity: 0.5;
+            background: var(--primary);
+            color: white;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item:hover {
+            background-color: var(--light);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--gray);
+            transition: color 0.2s;
+        }
+
+        .task-actions button.edit-task:hover {
+            color: var(--primary);
+        }
+
+        .task-actions button.delete-task:hover {
+            color: var(--danger);
+        }
+
+        [contenteditable="true"] {
+            border-bottom: 1px dashed var(--gray);
+            padding: 2px;
+        }
+
+        [contenteditable="true"]:focus {
+            outline: none;
+            border-bottom: 1px solid var(--primary);
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        .add-task-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .add-task-form input {
+            flex: 6;
+        }
+
+        .add-task-form input[type="number"] {
+            flex: 1;
+        }
+
+        .add-task-form button {
+            flex: 1;
+        }
+
+        .holiday-list {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .holiday-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .holiday-item:last-child {
+            border-bottom: none;
+        }
+
+        .holiday-item:hover {
+            background-color: var(--light);
+        }
+
+        .holiday-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .add-holiday-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .add-holiday-form input {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .add-holiday-form button {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .timeline-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light);
+            border-radius: 5px;
+            display: none;
+        }
+
+        .timeline-info h3 {
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+
+        .timeline-info p {
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            color: white;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: var(--success);
+        }
+
+        .alert-danger {
+            background-color: var(--danger);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            color: var(--gray);
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .timeline-form, .timeline-preview {
+                min-width: 100%;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #f5f5f5;
+            }
+            
+            .timeline-form, .timeline-preview {
+                background-color: #2d2d2d;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            }
+            
+            .form-control {
+                background-color: #3d3d3d;
+                border-color: #444;
+                color: #f5f5f5;
+            }
+            
+            .task-item, .holiday-item {
+                border-color: #444;
+            }
+            
+            .task-item:hover, .holiday-item:hover {
+                background-color: #3d3d3d;
+            }
+            
+            .timeline-placeholder {
+                color: #aaa;
+            }
+            
+            .timeline-placeholder i {
+                color: #555;
+            }
+            
+            .timeline-info {
+                background-color: #3d3d3d;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Project Timeline Generator</h1>
+            <p>Create professional timelines with customizable tasks, holidays and dependencies</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="alert alert-success" id="success-alert"></div>
+        <div class="alert alert-danger" id="error-alert"></div>
+
+        <div class="main-content">
+            <div class="timeline-form">
+                <h2>Timeline Configuration</h2>
+                <form id="timeline-form">
+                    <div class="form-group">
+                        <label for="project-name">Project Name</label>
+                        <input type="text" class="form-control" id="project-name" placeholder="Enter project name" value="Fire Protection System Installation">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="start-date">Start Date</label>
+                        <input type="date" class="form-control" id="start-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tasks</label>
+                        <div class="add-task-form">
+                            <input type="text" class="form-control" id="task-name" placeholder="Task name">
+                            <input type="number" class="form-control" id="task-duration" placeholder="Days" min="1" value="1">
+                            <button type="button" class="btn" id="add-task-btn">Add</button>
+                        </div>
+                        <div class="task-list" id="task-list">
+                            <!-- Tasks will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Holidays</label>
+                        <div class="add-holiday-form">
+                            <input type="text" class="form-control" id="holiday-name" placeholder="Holiday name">
+                            <input type="date" class="form-control" id="holiday-start">
+                            <input type="date" class="form-control" id="holiday-end">
+                            <input type="color" class="form-control" id="holiday-color" value="#ff9999">
+                            <button type="button" class="btn" id="add-holiday-btn">Add</button>
+                        </div>
+                        <div class="holiday-list" id="holiday-list">
+                            <!-- Holidays will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-block">Generate Timeline</button>
+                </form>
+            </div>
+
+            <div class="timeline-preview">
+                <div class="timeline-placeholder" id="timeline-placeholder">
+                    <i class="fas fa-chart-gantt"></i>
+                    <p>Your timeline will appear here</p>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating timeline...</p>
+                </div>
+                <img src="" alt="Project Timeline" class="timeline-image" id="timeline-image">
+                <div class="timeline-info" id="timeline-info">
+                    <h3>Timeline Information</h3>
+                    <p id="project-duration"></p>
+                    <p id="working-days"></p>
+                    <p id="project-end-date"></p>
+                </div>
+                <div class="timeline-actions" id="timeline-actions">
+                    <button class="btn" id="download-btn">Download Image</button>
+                    <button class="btn btn-success" id="share-btn">Share Timeline</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Project Timeline Generator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Set default date to today
+            const today = new Date();
+            document.getElementById('start-date').valueAsDate = today;
+            
+            // Set default holiday dates (one week from today)
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+            document.getElementById('holiday-start').valueAsDate = nextWeek;
+            
+            const twoWeeksFromNow = new Date(today);
+            twoWeeksFromNow.setDate(today.getDate() + 14);
+            document.getElementById('holiday-end').valueAsDate = twoWeeksFromNow;
+            
+            // Default tasks
+            const defaultTasks = [
+                { name: "Riser Works", duration: 8 },
+                { name: "Riser Pressure Test", duration: 2 },
+                { name: "Sprinkler Works", duration: 10 },
+                { name: "Sprinkler Pressure Test", duration: 2 },
+                { name: "Product Ex Work", duration: 49 },
+                { name: "Shipped on Board", duration: 18 },
+                { name: "Vessel at Chittagong", duration: 21 },
+                { name: "Materials from port to site", duration: 10 },
+                { name: "Pump Room", duration: 10 },
+                { name: "Testing Commissioning & Balancing", duration: 5 }
+            ];
+            
+            // Add default tasks to the list
+            defaultTasks.forEach(task => {
+                addTaskToList(task.name, task.duration);
+            });
+            
+            // Add default holiday
+            addHolidayToList("Eid Holiday", document.getElementById('holiday-start').value, 
+                             document.getElementById('holiday-end').value, "#ff9999");
+            
+            // Add task button click handler
+            document.getElementById('add-task-btn').addEventListener('click', function() {
+                const taskName = document.getElementById('task-name').value.trim();
+                const taskDuration = parseInt(document.getElementById('task-duration').value);
+                
+                if (taskName && taskDuration > 0) {
+                    addTaskToList(taskName, taskDuration);
+                    document.getElementById('task-name').value = '';
+                    document.getElementById('task-duration').value = '1';
+                } else {
+                    showError("Please enter a valid task name and duration");
+                }
+            });
+            
+            // Add holiday button click handler
+            document.getElementById('add-holiday-btn').addEventListener('click', function() {
+                const holidayName = document.getElementById('holiday-name').value.trim();
+                const holidayStart = document.getElementById('holiday-start').value;
+                const holidayEnd = document.getElementById('holiday-end').value;
+                const holidayColor = document.getElementById('holiday-color').value;
+                
+                if (holidayName && holidayStart && holidayEnd) {
+                    if (new Date(holidayStart) > new Date(holidayEnd)) {
+                        showError("Holiday end date must be after start date");
+                        return;
+                    }
+                    
+                    addHolidayToList(holidayName, holidayStart, holidayEnd, holidayColor);
+                    document.getElementById('holiday-name').value = '';
+                } else {
+                    showError("Please fill in all holiday fields");
+                }
+            });
+            
+            // Form submission handler
+            document.getElementById('timeline-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateTimeline();
+            });
+            
+            // Download button click handler
+            document.getElementById('download-btn').addEventListener('click', function() {
+                downloadTimeline();
+            });
+            
+            // Share button click handler
+            document.getElementById('share-btn').addEventListener('click', function() {
+                shareTimeline();
+            });
+            
+            // Function to add a task to the list
+            function addTaskToList(name, duration) {
+                const taskList = document.getElementById('task-list');
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.draggable = true; // Make it draggable
+                taskItem.innerHTML = `
+                    <div class="task-content">
+                        <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
+                        <div class="task-info">
+                            <strong contenteditable="true">${name}</strong> (<span class="duration-value" contenteditable="true">${duration}</span> days)
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button type="button" class="edit-task"><i class="fas fa-edit"></i></button>
+                        <button type="button" class="delete-task"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                // Add edit functionality
+                taskItem.querySelector('.edit-task').addEventListener('click', function() {
+                    const nameElement = taskItem.querySelector('strong');
+                    const durationElement = taskItem.querySelector('.duration-value');
+                    
+                    // Create temporary input for duration
+                    const currentName = nameElement.textContent;
+                    const currentDuration = parseInt(durationElement.textContent);
+                    
+                    // Show edit dialog or inline editing
+                    const newDuration = prompt(`Enter new duration for "${currentName}"`, currentDuration);
+                    
+                    if (newDuration !== null) {
+                        const parsedDuration = parseInt(newDuration);
+                        if (!isNaN(parsedDuration) && parsedDuration > 0) {
+                            durationElement.textContent = parsedDuration;
+                        } else {
+                            showError("Please enter a valid duration (positive number)");
+                        }
+                    }
+                });
+                
+                // Add delete functionality
+                taskItem.querySelector('.delete-task').addEventListener('click', function() {
+                    taskList.removeChild(taskItem);
+                });
+                
+                // Add event listener for name editing to ensure it's saved properly
+                const nameElement = taskItem.querySelector('strong');
+                nameElement.addEventListener('blur', function() {
+                    if (nameElement.textContent.trim() === '') {
+                        nameElement.textContent = 'Unnamed Task';
+                        showError("Task name cannot be empty");
+                    }
+                });
+                
+                // Add event listener for duration editing to ensure it's a valid number
+                const durationElement = taskItem.querySelector('.duration-value');
+                durationElement.addEventListener('blur', function() {
+                    const newDuration = parseInt(durationElement.textContent);
+                    if (isNaN(newDuration) || newDuration <= 0) {
+                        durationElement.textContent = '1';
+                        showError("Duration must be a positive number");
+                    }
+                });
+                
+                // Prevent line breaks in editable content
+                nameElement.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        nameElement.blur();
+                    }
+                });
+                
+                durationElement.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        durationElement.blur();
+                    }
+                });
+                
+                taskList.appendChild(taskItem);
+            }
+
+            // Initialize Sortable on the task list
+            const taskList = document.getElementById('task-list');
+            new Sortable(taskList, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'task-item-ghost',
+                onEnd: function(evt) {
+                    // You can add code here to handle the reordering if needed
+                    console.log('Task reordered:', evt.oldIndex, 'to', evt.newIndex);
+                }
+            });
+
+            // Function to add a holiday to the list
+            function addHolidayToList(name, startDate, endDate, color) {
+                const holidayList = document.getElementById('holiday-list');
+                const holidayItem = document.createElement('div');
+                holidayItem.className = 'holiday-item';
+                
+                const startDateObj = new Date(startDate);
+                const endDateObj = new Date(endDate);
+                const formattedStartDate = startDateObj.toLocaleDateString();
+                const formattedEndDate = endDateObj.toLocaleDateString();
+                
+                holidayItem.innerHTML = `
+                    <div>
+                        <span class="holiday-color" style="background-color: ${color}"></span>
+                        <strong>${name}</strong> (${formattedStartDate} - ${formattedEndDate})
+                    </div>
+                    <div class="task-actions">
+                        <button type="button" class="delete-holiday"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                // Store the original dates as data attributes
+                holidayItem.dataset.startDate = startDate;
+                holidayItem.dataset.endDate = endDate;
+                holidayItem.dataset.color = color;
+                
+                // Add delete functionality
+                holidayItem.querySelector('.delete-holiday').addEventListener('click', function() {
+                    holidayList.removeChild(holidayItem);
+                });
+                
+                holidayList.appendChild(holidayItem);
+            }
+            
+            // Function to generate the timeline
+            function generateTimeline() {
+                // Show loading indicator
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('timeline-placeholder').style.display = 'none';
+                document.getElementById('timeline-image').style.display = 'none';
+                document.getElementById('timeline-info').style.display = 'none';
+                document.getElementById('timeline-actions').style.display = 'none';
+                
+                // Collect form data
+                const projectName = document.getElementById('project-name').value.trim() || 'Project Timeline';
+                const startDate = document.getElementById('start-date').value;
+                
+                // Collect tasks
+                const tasks = [];
+                document.querySelectorAll('#task-list .task-item').forEach(item => {
+                    const taskText = item.querySelector('strong').textContent.trim();
+                    const duration = parseInt(item.querySelector('.duration-value').textContent);
+                    
+                    tasks.push({
+                        name: taskText,
+                        duration: duration
+                    });
+                });
+                
+                // Collect holidays
+                const holidays = [];
+                document.querySelectorAll('#holiday-list .holiday-item').forEach(item => {
+                    const holidayName = item.querySelector('strong').textContent;
+                    const startDate = item.dataset.startDate;
+                    const endDate = item.dataset.endDate;
+                    const color = item.dataset.color;
+                    
+                    holidays.push({
+                        name: holidayName,
+                        start_date: startDate,
+                        end_date: endDate,
+                        color: color
+                    });
+                });
+                
+                // Prepare the request data
+                const requestData = {
+                    project_name: projectName,
+                    start_date: startDate,
+                    tasks: tasks,
+                    holidays: holidays,
+                    dependencies: {
+                        sequential_groups: [
+                            { start_idx: 0, end_idx: 3 },  // Construction tasks
+                            { start_idx: 4, end_idx: 7 },  // Procurement tasks
+                        ],
+                        dependent_tasks: [
+                            { idx: 8, depends_on_idx: 7 },  // Task 8 starts after task 7
+                            { idx: 9, depends_on_idx: 8 }   // Task 9 starts after task 8
+                        ]
+                    }
+                };
+                
+                // Send the request to the server
+                fetch('/generate-timeline', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // Display the timeline image
+                    const timelineImage = document.getElementById('timeline-image');
+                    timelineImage.src = 'data:image/png;base64,' + data.image;
+                    timelineImage.style.display = 'block';
+                    
+                    // Update timeline info
+                    document.getElementById('project-duration').textContent = `Total Duration: ${data.total_days} days`;
+                    document.getElementById('working-days').textContent = `Working Days: ${data.working_days} days`;
+                    document.getElementById('project-end-date').textContent = `Project End Date: ${formatDate(data.end_date)}`;
+                    
+                    // Show timeline info and actions
+                    document.getElementById('timeline-info').style.display = 'block';
+                    document.getElementById('timeline-actions').style.display = 'flex';
+                    
+                    // Show success message
+                    showSuccess("Timeline generated successfully!");
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('timeline-placeholder').style.display = 'block';
+                    
+                    // Show error message
+                    showError("Error generating timeline: " + error.message);
+                });
+            }
+            
+            // Function to download the timeline
+            function downloadTimeline() {
+                const projectName = document.getElementById('project-name').value.trim() || 'Project Timeline';
+                
+                // Get the image source
+                const timelineImage = document.getElementById('timeline-image');
+                if (!timelineImage.src || timelineImage.style.display === 'none') {
+                    showError("Please generate a timeline first");
+                    return;
+                }
+                
+                // Create a temporary link to download the image
+                const link = document.createElement('a');
+                link.href = timelineImage.src;
+                link.download = `${projectName.replace(/\s+/g, '_')}_timeline.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess("Timeline downloaded successfully!");
+            }
+            
+            // Function to share the timeline (simplified for demo)
+            function shareTimeline() {
+                const timelineImage = document.getElementById('timeline-image');
+                if (!timelineImage.src || timelineImage.style.display === 'none') {
+                    showError("Please generate a timeline first");
+                    return;
+                }
+                
+                // Check if Web Share API is available
+                if (navigator.share) {
+                    fetch(timelineImage.src)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'timeline.png', { type: 'image/png' });
+                            navigator.share({
+                                title: document.getElementById('project-name').value.trim() || 'Project Timeline',
+                                text: 'Check out my project timeline!',
+                                files: [file]
+                            })
+                            .then(() => showSuccess("Timeline shared successfully!"))
+                            .catch(error => showError("Error sharing timeline: " + error.message));
+                        });
+                } else {
+                    // Fallback for browsers that don't support Web Share API
+                    showError("Sharing is not supported in this browser. Please download the image instead.");
+                    }
+                    }
+
+                    // Helper function to show success message
+                    function showSuccess(message) {
+                    const alert = document.getElementById('success-alert');
+                    alert.textContent = message;
+                    alert.style.display = 'block';
+
+                    // Hide after 3 seconds
+                    setTimeout(() => {
+                    alert.style.display = 'none';
+                    }, 3000);
+                    }
+
+                    // Helper function to show error message
+                    function showError(message) {
+                    const alert = document.getElementById('error-alert');
+                    alert.textContent = message;
+                    alert.style.display = 'block';
+
+                    // Hide after 3 seconds
+                    setTimeout(() => {
+                    alert.style.display = 'none';
+                    }, 3000);
+                    }
+
+                    // Helper function to format date
+                    function formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                    });
+                    }
+
+                    // For demo purposes, simulate a server response
+                    // In a real implementation, this would be handled by your backend
+                    async function simulateServerResponse() {
+                    // Simulate network delay
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    return {
+                    image: 'iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAIAAAC6s0uzAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nOzdeXxM1/8/8DOTfZElIZYQYt8jQexLUEpQS1FLqaL23/LpQku1VbRFtWgVpZYqSmmtpZaI2Pd9X2NfQhKRRGTP74/7uV+TyUwmM5mZO5N5Pf9o5s6dO2dO7r3vOeeee44FYwwQQgghhLRjKXcBEEIIIVT5YABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQkgUGYIQQQgjJAgMwQgghhGSBARghhBBCssAAjBBCCCFZYABGCCGEkCwwACOEEEJIFhiAEUIIISQLDMAIIYQQksX/A6fZ7EbswFx6AAAAAElFTkSuQmCC',
+                    total_days: 135,
+                    working_days: 98,
+                    end_date: '2025-08-05'
+                    };
+                    }
+                    });
+                    </script>
+                    </body>
+                    </html>
